@@ -1,0 +1,42 @@
+# Dependencias y build
+node_modules/
+dist/
+dist-ssr/
+.cache/
+
+# Variables de entorno locales (no secretos en Git)
+.env
+.env.*
+!.env.example
+
+# Logs npm/yarn/pnpm
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cobertura / reportes de tests
+coverage/
+.nyc_output/
+
+# IDE (opcional por proyecto front)
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# Playwright / Cypress / caches comunes (si los usas después)
+test-results/
+playwright-report/
+.playwright/
+
+# SO
+.DS_Store
+Thumbs.db
+
+# Herramientas opcionales
+.vercel
+.turbo
+*.tsbuildinfo

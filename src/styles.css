@@ -1,0 +1,524 @@
+/*
+ * Copyright (c) 2026 — Proyecto académico Invernadero.
+ * Estilos globales del SPA (fondo neutro; acentos verdes en controles).
+ */
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  line-height: 1.5;
+  color: #1f2937;
+  background: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 48%, #e8eef5 100%);
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+.layout {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.65rem;
+}
+
+.subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.65rem;
+}
+
+.health-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: #eef2f0;
+  color: #4c6656;
+}
+
+.health-pill.ok {
+  background: #d9f5e4;
+  color: #14532d;
+}
+
+.health-pill.bad {
+  background: #fde8e8;
+  color: #7f1d1d;
+}
+
+.health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.flash-success {
+  margin-top: 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  background: #d9f5e4;
+  color: #14532d;
+  font-weight: 600;
+  text-align: center;
+}
+
+.steps-card {
+  margin-top: 1.25rem;
+}
+
+.steps-heading {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.steps-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #475569;
+}
+
+.steps-list li {
+  margin-bottom: 0.35rem;
+}
+
+.panel-hint {
+  margin: -0.35rem 0 0.85rem;
+  font-size: 0.88rem;
+}
+
+.empty-detail {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.small {
+  font-size: 0.88rem;
+}
+
+.lang button {
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid #2e7d4a;
+  background: #fff;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.lang button.active {
+  background: #2e7d4a;
+  color: #fff;
+}
+
+.dashboard {
+  margin-top: 1.75rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 860px) {
+  .dashboard {
+    grid-template-columns: minmax(280px, 340px) 1fr;
+    align-items: start;
+  }
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem 1.5rem;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+.zone-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.zone-list li {
+  margin-bottom: 0.5rem;
+}
+
+.zone-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.zone-row .zone-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-delete-zone {
+  flex-shrink: 0;
+  width: 2.25rem;
+  border: 1px solid #c5e3d1;
+  border-radius: 10px;
+  background: #fff;
+  color: #8b2942;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-delete-zone:hover {
+  background: #fde8ec;
+  border-color: #d4a5b0;
+}
+
+.zone-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #c5e3d1;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  background: #fafdfb;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.zone-item:hover {
+  border-color: #238051;
+}
+
+.zone-item.selected {
+  border-color: #238051;
+  background: #e8f5ec;
+  box-shadow: 0 0 0 2px rgba(35, 128, 81, 0.2);
+}
+
+.zone-name {
+  font-weight: 600;
+}
+
+.zone-desc {
+  font-size: 0.85rem;
+}
+
+.stack-form {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dceee3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.form-heading {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #b8d4c4;
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 3rem;
+}
+
+.label-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.primary {
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #238051;
+  color: #fff;
+}
+
+.primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.secondary {
+  border: 1px solid #238051;
+  border-radius: 10px;
+  padding: 0.45rem 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  color: #1a5c3c;
+}
+
+.secondary:hover {
+  background: #f0faf4;
+}
+
+.muted {
+  color: #4c6656;
+}
+
+.error {
+  color: #9b1c1c;
+}
+
+.hint {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.detail-head h2 {
+  margin: 0 0 0.35rem;
+}
+
+.readings-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.readings-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 0.75rem 0 1rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid #dceee3;
+}
+
+.data-table th {
+  color: #4c6656;
+  font-weight: 600;
+}
+
+.data-table .num {
+  font-variant-numeric: tabular-nums;
+}
+
+.reading-form {
+  margin-top: 1.5rem;
+}
+
+.footer {
+  margin-top: 2rem;
+}
+
+/* Pantalla de login (estilo cercano al botón estándar de Google / Material) */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #f0f4f9;
+  color: #1f1f1f;
+}
+
+.login-topbar {
+  padding: 1rem 1.25rem;
+}
+
+.login-topbar-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lang-compact .active {
+  font-weight: 500;
+}
+
+.login-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 1.25rem 2.5rem;
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 400px;
+  padding: 2.25rem 2rem 2rem;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow:
+    0 1px 2px rgba(60, 64, 67, 0.3),
+    0 2px 6px 2px rgba(60, 64, 67, 0.15);
+  text-align: center;
+}
+
+.login-app-name {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #5f6368;
+}
+
+.login-welcome {
+  margin: 0 0 0.35rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #5f6368;
+}
+
+.login-page .lang button {
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid #dadce0;
+  background: #fff;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.login-page .lang button.active {
+  background: #202124;
+  color: #fff;
+  border-color: #202124;
+}
+
+.login-title {
+  margin: 0 0 0.6rem;
+  font-size: 1.65rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #202124;
+  letter-spacing: -0.02em;
+}
+
+.login-lead {
+  margin: 0 0 1.65rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #5f6368;
+}
+
+.google-g {
+  flex-shrink: 0;
+}
+
+.google-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+  padding: 12px 18px;
+  background: #fff;
+  color: #1f1f1f;
+  border: 1px solid #747775;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.google-signin-btn:hover {
+  background: #f8f9fa;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.google-signin-btn:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+.google-signin-btn:active {
+  background: #f1f3f4;
+  box-shadow: none;
+}
+
+.user-session {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+}
+
+.user-label {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-link {
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.logout-link:hover {
+  text-decoration: underline;
+}
