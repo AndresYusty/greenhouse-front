@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 — Proyecto académico Invernadero.
- * Panel de monitorización con guía paso a paso e indicador de API.
+ * Panel de monitorización con guía paso a paso.
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,6 @@ import {
   crearZona,
   eliminarZona,
   fetchAuthStatus,
-  fetchBackendHealth,
   fetchLecturas,
   fetchZonas,
   registrarLectura,
@@ -83,7 +82,6 @@ export default function App() {
   const [readingInputError, setReadingInputError] = useState<string | null>(null);
   const [savingReading, setSavingReading] = useState(false);
 
-  const [health, setHealth] = useState<"UP" | "DOWN" | "CHECK">("CHECK");
   const [flash, setFlash] = useState<Flash>(null);
 
   const reloadZonas = useCallback(() => {
@@ -103,19 +101,6 @@ export default function App() {
       .catch(() => setAuthError(t("auth.error")))
       .finally(() => setAuthLoading(false));
   }, [t]);
-
-  const pingHealth = useCallback(() => {
-    void fetchBackendHealth().then((s) => setHealth(s === "UP" ? "UP" : "DOWN"));
-  }, []);
-
-  useEffect(() => {
-    if (authLoading) return;
-    const onLoginScreen = Boolean(auth?.oauth2Enabled && !auth.authenticated);
-    if (onLoginScreen) return;
-    pingHealth();
-    const id = window.setInterval(pingHealth, 12000);
-    return () => window.clearInterval(id);
-  }, [pingHealth, authLoading, auth?.oauth2Enabled, auth?.authenticated]);
 
   useEffect(() => {
     if (!sessionReady) return;
@@ -196,9 +181,6 @@ export default function App() {
 
   const locale = i18n.language.startsWith("es") ? "es" : "en";
 
-  const healthLabel =
-    health === "CHECK" ? t("health.checking") : health === "UP" ? t("health.ok") : t("health.down");
-
   if (authLoading) {
     return (
       <div className="layout">
@@ -265,10 +247,6 @@ export default function App() {
               </a>
             </div>
           ) : null}
-          <span className={`health-pill ${health === "UP" ? "ok" : health === "DOWN" ? "bad" : ""}`} title={healthLabel}>
-            <span className="health-dot" aria-hidden />
-            {healthLabel}
-          </span>
           <div className="lang">
             <button type="button" className={i18n.language.startsWith("es") ? "active" : ""} onClick={() => void i18n.changeLanguage("es")}>
               {t("lang.es")}

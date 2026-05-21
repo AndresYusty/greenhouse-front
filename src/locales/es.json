@@ -1,9 +1,6 @@
 {
   "app.title": "Invernadero inteligente",
   "app.subtitle": "Monitor de zonas y lecturas ambientales",
-  "health.ok": "API en línea",
-  "health.down": "Sin conexión con la API",
-  "health.checking": "Comprobando…",
   "steps.title": "Cómo usar este panel",
   "steps.1": "Crea una zona (formulario de la izquierda) o elige una existente.",
   "steps.2": "Al seleccionar una zona verás el historial de mediciones.",

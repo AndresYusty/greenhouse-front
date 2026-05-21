@@ -1,9 +1,6 @@
 {
   "app.title": "Smart greenhouse",
   "app.subtitle": "Zone monitor and environmental readings",
-  "health.ok": "API online",
-  "health.down": "Cannot reach API",
-  "health.checking": "Checking…",
   "steps.title": "How to use this panel",
   "steps.1": "Create a zone (left form) or pick one from the list.",
   "steps.2": "When a zone is selected you’ll see its measurement history.",

@@ -105,13 +105,3 @@ export async function eliminarZona(zonaId: string): Promise<void> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
-export async function fetchBackendHealth(): Promise<"UP" | "DOWN"> {
-  try {
-    const res = await fetch("/actuator/health", { credentials: "omit" });
-    if (!res.ok) return "DOWN";
-    const body = (await res.json()) as { status?: string };
-    return body.status === "UP" ? "UP" : "DOWN";
-  } catch {
-    return "DOWN";
-  }
-}

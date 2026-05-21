@@ -44,36 +44,6 @@ body {
   gap: 0.65rem;
 }
 
-.health-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.35rem 0.65rem;
-  border-radius: 999px;
-  background: #eef2f0;
-  color: #4c6656;
-}
-
-.health-pill.ok {
-  background: #d9f5e4;
-  color: #14532d;
-}
-
-.health-pill.bad {
-  background: #fde8e8;
-  color: #7f1d1d;
-}
-
-.health-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.85;
-}
-
 .flash-success {
   margin-top: 1rem;
   padding: 0.65rem 1rem;
