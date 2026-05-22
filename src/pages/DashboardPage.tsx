@@ -5,13 +5,19 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  crearCultivo,
   crearZona,
+  definirUmbral,
   eliminarZona,
+  fetchCultivos,
   fetchLecturas,
+  fetchUmbrales,
   fetchZonas,
   registrarLectura,
+  type CultivoDto,
   type LecturaDto,
   type MetricaTipo,
+  type UmbralDto,
   type ZonaDto,
 } from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -35,7 +41,7 @@ function formatDate(iso: string, locale: string): string {
   }
 }
 
-type Flash = null | "zone" | "reading" | "zoneDeleted";
+type Flash = null | "zone" | "reading" | "zoneDeleted" | "cultivo" | "umbral";
 
 export function DashboardPage() {
   const { t, i18n } = useTranslation();
@@ -48,6 +54,10 @@ export function DashboardPage() {
   const [lecturas, setLecturas] = useState<LecturaDto[] | null>(null);
   const [lecturasError, setLecturasError] = useState<string | null>(null);
 
+  const [cultivos, setCultivos] = useState<CultivoDto[] | null>(null);
+  const [umbrales, setUmbrales] = useState<UmbralDto[] | null>(null);
+  const [metaError, setMetaError] = useState<string | null>(null);
+
   const [newZoneName, setNewZoneName] = useState("");
   const [newZoneDesc, setNewZoneDesc] = useState("");
   const [creatingZone, setCreatingZone] = useState(false);
@@ -56,6 +66,17 @@ export function DashboardPage() {
   const [readingValor, setReadingValor] = useState<string>("22");
   const [readingInputError, setReadingInputError] = useState<string | null>(null);
   const [savingReading, setSavingReading] = useState(false);
+
+  const [cultivoNombre, setCultivoNombre] = useState("");
+  const [cultivoVariedad, setCultivoVariedad] = useState("");
+  const [cultivoNotas, setCultivoNotas] = useState("");
+  const [savingCultivo, setSavingCultivo] = useState(false);
+
+  const [umbralTipo, setUmbralTipo] = useState<MetricaTipo>("TEMPERATURA_C");
+  const [umbralMinStr, setUmbralMinStr] = useState("");
+  const [umbralMaxStr, setUmbralMaxStr] = useState("");
+  const [umbralInputError, setUmbralInputError] = useState<string | null>(null);
+  const [savingUmbral, setSavingUmbral] = useState(false);
 
   const [flash, setFlash] = useState<Flash>(null);
 
@@ -92,16 +113,44 @@ export function DashboardPage() {
     [t],
   );
 
+  const loadMeta = useCallback(
+    (zonaId: string) => {
+      setMetaError(null);
+      setCultivos(null);
+      setUmbrales(null);
+      Promise.all([fetchCultivos(zonaId), fetchUmbrales(zonaId)])
+        .then(([c, u]) => {
+          setCultivos(c);
+          setUmbrales(u);
+        })
+        .catch(() => setMetaError(t("zones.error")));
+    },
+    [t],
+  );
+
   useEffect(() => {
-    if (selectedId) loadLecturas(selectedId);
-    else setLecturas(null);
-  }, [selectedId, loadLecturas]);
+    if (!selectedId) {
+      setLecturas(null);
+      setCultivos(null);
+      setUmbrales(null);
+      return;
+    }
+    loadLecturas(selectedId);
+    loadMeta(selectedId);
+  }, [selectedId, loadLecturas, loadMeta]);
 
   useEffect(() => {
     if (!flash) return;
     const tmr = window.setTimeout(() => setFlash(null), 3500);
     return () => window.clearTimeout(tmr);
   }, [flash]);
+
+  useEffect(() => {
+    setUmbralTipo("TEMPERATURA_C");
+    setUmbralMinStr("");
+    setUmbralMaxStr("");
+    setUmbralInputError(null);
+  }, [selectedId]);
 
   const selected = zonas?.find((z) => z.id === selectedId) ?? null;
 
@@ -140,6 +189,60 @@ export function DashboardPage() {
       })
       .catch(() => setLecturasError(t("zones.error")))
       .finally(() => setSavingReading(false));
+  };
+
+  const handleSaveCultivo = (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedId || savingCultivo || !cultivoNombre.trim()) return;
+    setSavingCultivo(true);
+    crearCultivo(selectedId, cultivoNombre, cultivoVariedad, cultivoNotas)
+      .then(() => {
+        setFlash("cultivo");
+        setCultivoNombre("");
+        setCultivoVariedad("");
+        setCultivoNotas("");
+        return fetchCultivos(selectedId);
+      })
+      .then(setCultivos)
+      .catch(() => setMetaError(t("zones.error")))
+      .finally(() => setSavingCultivo(false));
+  };
+
+  const handleSaveUmbral = (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedId || savingUmbral) return;
+    const rawMin = umbralMinStr.trim();
+    const rawMax = umbralMaxStr.trim();
+    let vmin: number | undefined;
+    let vmax: number | undefined;
+    if (rawMin !== "") {
+      vmin = Number(rawMin.replace(",", "."));
+      if (Number.isNaN(vmin)) {
+        setUmbralInputError(t("reading.invalidValue"));
+        return;
+      }
+    }
+    if (rawMax !== "") {
+      vmax = Number(rawMax.replace(",", "."));
+      if (Number.isNaN(vmax)) {
+        setUmbralInputError(t("reading.invalidValue"));
+        return;
+      }
+    }
+    if (vmin === undefined && vmax === undefined) {
+      setUmbralInputError(t("thresholds.needOne"));
+      return;
+    }
+    setUmbralInputError(null);
+    setSavingUmbral(true);
+    definirUmbral(selectedId, umbralTipo, vmin, vmax)
+      .then(() => {
+        setFlash("umbral");
+        return fetchUmbrales(selectedId);
+      })
+      .then(setUmbrales)
+      .catch(() => setMetaError(t("zones.error")))
+      .finally(() => setSavingUmbral(false));
   };
 
   const locale = i18n.language.startsWith("es") ? "es" : "en";
@@ -183,7 +286,15 @@ export function DashboardPage() {
 
       {flash && (
         <div className="flash-success" role="status">
-          {flash === "zone" ? t("success.zone") : flash === "reading" ? t("success.reading") : t("success.zoneDeleted")}
+          {flash === "zone"
+            ? t("success.zone")
+            : flash === "reading"
+              ? t("success.reading")
+              : flash === "cultivo"
+                ? t("success.cultivo")
+                : flash === "umbral"
+                  ? t("success.umbral")
+                  : t("success.zoneDeleted")}
         </div>
       )}
 
@@ -284,6 +395,131 @@ export function DashboardPage() {
                 <h2>{selected.nombre}</h2>
                 {selected.descripcion ? <p className="muted">{selected.descripcion}</p> : null}
               </div>
+
+              <h3>{t("crops.title")}</h3>
+              {metaError && <p className="error">{metaError}</p>}
+              {cultivos === null && !metaError && <p className="muted">{t("crops.loading")}</p>}
+              {cultivos && cultivos.length === 0 && !metaError && <p className="muted">{t("crops.empty")}</p>}
+              {cultivos && cultivos.length > 0 && (
+                <ul className="cultivos-list muted">
+                  {cultivos.map((c) => (
+                    <li key={c.id}>
+                      <strong>{c.nombre}</strong>
+                      {c.variedad ? ` (${c.variedad})` : null}
+                      {c.notas ? ` — ${c.notas}` : null}{" "}
+                      <span className="muted">({formatDate(c.plantadoEn, locale)})</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <form className="stack-form" onSubmit={handleSaveCultivo}>
+                <label className="label-row">
+                  <span>{t("crops.nombre")}</span>
+                  <input
+                    className="input"
+                    value={cultivoNombre}
+                    onChange={(ev) => setCultivoNombre(ev.target.value)}
+                    maxLength={200}
+                    required
+                    aria-label={t("crops.nombre")}
+                  />
+                </label>
+                <label className="label-row">
+                  <span>{t("crops.variedad")}</span>
+                  <input
+                    className="input"
+                    value={cultivoVariedad}
+                    onChange={(ev) => setCultivoVariedad(ev.target.value)}
+                    maxLength={120}
+                    aria-label={t("crops.variedad")}
+                  />
+                </label>
+                <label className="label-row">
+                  <span>{t("crops.notas")}</span>
+                  <input
+                    className="input"
+                    value={cultivoNotas}
+                    onChange={(ev) => setCultivoNotas(ev.target.value)}
+                    maxLength={2000}
+                    aria-label={t("crops.notas")}
+                  />
+                </label>
+                <button type="submit" className="secondary" disabled={savingCultivo}>
+                  {savingCultivo ? t("crops.saving") : t("crops.submit")}
+                </button>
+              </form>
+
+              <h3>{t("thresholds.title")}</h3>
+              <p className="muted small">{t("thresholds.help")}</p>
+              {umbrales === null && !metaError && <p className="muted">{t("thresholds.loading")}</p>}
+              {umbrales && umbrales.length > 0 && (
+                <div className="table-wrap">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>{t("thresholds.metric")}</th>
+                        <th>{t("thresholds.min")}</th>
+                        <th>{t("thresholds.max")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {umbrales.map((u) => (
+                        <tr key={u.id}>
+                          <td>{t(`metric.${u.tipo}`)}</td>
+                          <td className="num">{u.valorMin != null ? u.valorMin : "—"}</td>
+                          <td className="num">{u.valorMax != null ? u.valorMax : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <form className="stack-form reading-form" onSubmit={handleSaveUmbral}>
+                <label className="label-row">
+                  <span>{t("thresholds.metric")}</span>
+                  <select className="input" value={umbralTipo} onChange={(ev) => setUmbralTipo(ev.target.value as MetricaTipo)}>
+                    {METRICAS.map((m) => (
+                      <option key={m} value={m}>
+                        {t(`metric.${m}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="label-row">
+                  <span>{t("thresholds.min")}</span>
+                  <input
+                    className="input"
+                    type="text"
+                    inputMode="decimal"
+                    value={umbralMinStr}
+                    onChange={(ev) => {
+                      setUmbralMinStr(ev.target.value);
+                      setUmbralInputError(null);
+                    }}
+                  />
+                </label>
+                <label className="label-row">
+                  <span>{t("thresholds.max")}</span>
+                  <input
+                    className="input"
+                    type="text"
+                    inputMode="decimal"
+                    value={umbralMaxStr}
+                    onChange={(ev) => {
+                      setUmbralMaxStr(ev.target.value);
+                      setUmbralInputError(null);
+                    }}
+                  />
+                </label>
+                {umbralInputError ? (
+                  <p className="error small" id="umbral-err">
+                    {umbralInputError}
+                  </p>
+                ) : null}
+                <button type="submit" className="secondary" disabled={savingUmbral}>
+                  {savingUmbral ? t("thresholds.saving") : t("thresholds.submit")}
+                </button>
+              </form>
 
               <div className="readings-head">
                 <h3>{t("readings.title")}</h3>

@@ -27,6 +27,25 @@ export type LecturaDto = {
   registradoEn: string;
 };
 
+export type CultivoDto = {
+  id: string;
+  zonaId: string;
+  nombre: string;
+  variedad: string;
+  notas: string;
+  plantadoEn: string;
+  creadoEn: string;
+};
+
+export type UmbralDto = {
+  id: string;
+  zonaId: string;
+  tipo: MetricaTipo;
+  valorMin: number | null;
+  valorMax: number | null;
+  creadoEn: string;
+};
+
 export type AuthStatusResponse = {
   authenticated: boolean;
   oauth2Enabled: boolean;
@@ -102,5 +121,54 @@ export async function eliminarZona(zonaId: string): Promise<void> {
     headers: { Accept: "application/json", "Accept-Language": navigator.language },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+export async function fetchCultivos(zonaId: string): Promise<CultivoDto[]> {
+  const res = await fetch(apiUrl(`/v1/zonas/${zonaId}/cultivos`), {
+    credentials: "include",
+    headers: { Accept: "application/json", "Accept-Language": navigator.language },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as CultivoDto[];
+}
+
+export async function crearCultivo(zonaId: string, nombre: string, variedad: string, notas: string): Promise<CultivoDto> {
+  const res = await fetch(apiUrl(`/v1/zonas/${zonaId}/cultivos`), {
+    method: "POST",
+    credentials: "include",
+    headers: jsonHeaders,
+    body: JSON.stringify({ nombre: nombre.trim(), variedad: variedad.trim() || undefined, notas: notas.trim() || undefined }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as CultivoDto;
+}
+
+export async function fetchUmbrales(zonaId: string): Promise<UmbralDto[]> {
+  const res = await fetch(apiUrl(`/v1/zonas/${zonaId}/umbrales`), {
+    credentials: "include",
+    headers: { Accept: "application/json", "Accept-Language": navigator.language },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as UmbralDto[];
+}
+
+export async function definirUmbral(
+  zonaId: string,
+  tipo: MetricaTipo,
+  valorMin: number | undefined,
+  valorMax: number | undefined,
+): Promise<UmbralDto> {
+  const res = await fetch(apiUrl(`/v1/zonas/${zonaId}/umbrales`), {
+    method: "PUT",
+    credentials: "include",
+    headers: jsonHeaders,
+    body: JSON.stringify({
+      tipo,
+      ...(valorMin !== undefined ? { valorMin } : {}),
+      ...(valorMax !== undefined ? { valorMax } : {}),
+    }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as UmbralDto;
 }
 
