@@ -43,6 +43,7 @@
   "lang.en": "Inglés",
   "auth.loading": "Comprobando sesión…",
   "auth.error": "No se pudo comprobar la sesión con el servidor.",
+  "auth.deployHint": "Si desplegaste la web en otro dominio que el backend, en Vercel → Settings → Environment Variables añade VITE_API_PREFIX con la URL pública del API (termina en /api), por ejemplo https://tu-servicio.up.railway.app/api Luego fuerza un nuevo deploy (Rebuild). Si ya la tienes, revisa también APP_CORS_ORIGINS en Railway (debe incluir exactamente esta URL del frontend).",
   "auth.title": "Iniciar sesión",
   "auth.body": "Entra con Google para ver tus zonas y lecturas del invernadero.",
   "auth.google": "Continuar con Google",

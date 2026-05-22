@@ -4,9 +4,11 @@
  * `/oauth2/...` y `/logout` deben apuntar al origen del API, no al del frontend.
  */
 
+import { API_PREFIX } from "../config/api";
+
 /** Vacío ⇒ mismo origen (dev con proxy de Vite). */
 export function getBackendOrigin(): string {
-  const raw = import.meta.env.VITE_API_PREFIX ?? "/api";
+  const raw = API_PREFIX;
   if (!raw.startsWith("http")) {
     return "";
   }

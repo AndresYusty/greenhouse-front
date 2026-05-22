@@ -4,6 +4,7 @@
  */
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { DeployApiHint } from "../components/DeployApiHint";
 import { useAuth } from "../context/AuthContext";
 import { toBackendPublicHref } from "../api/backendPublicUrl";
 
@@ -46,6 +47,7 @@ export function LoginPage() {
     return (
       <div className="layout">
         <p className="error">{error}</p>
+        <DeployApiHint />
       </div>
     );
   }

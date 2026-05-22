@@ -2,6 +2,7 @@
  * Copyright (c) 2026 — Proyecto académico Invernadero.
  * Cliente HTTP tipado alineado con docs/modelo-datos.json.
  */
+import { apiUrl } from "../config/api";
 
 /** Tipos de métrica (igual que MetricaTipo en el backend). */
 export type MetricaTipo =
@@ -34,8 +35,6 @@ export type AuthStatusResponse = {
   name?: string | null;
 };
 
-const prefix = import.meta.env.VITE_API_PREFIX ?? "/api";
-
 const jsonHeaders = {
   Accept: "application/json",
   "Content-Type": "application/json",
@@ -43,7 +42,7 @@ const jsonHeaders = {
 };
 
 export async function fetchAuthStatus(): Promise<AuthStatusResponse> {
-  const res = await fetch(`${prefix}/v1/auth/status`, {
+  const res = await fetch(apiUrl("/v1/auth/status"), {
     credentials: "include",
     headers: { Accept: "application/json", "Accept-Language": navigator.language },
   });
@@ -52,7 +51,7 @@ export async function fetchAuthStatus(): Promise<AuthStatusResponse> {
 }
 
 export async function fetchZonas(): Promise<ZonaDto[]> {
-  const res = await fetch(`${prefix}/v1/zonas`, {
+  const res = await fetch(apiUrl("/v1/zonas"), {
     credentials: "include",
     headers: { Accept: "application/json", "Accept-Language": navigator.language },
   });
@@ -61,7 +60,7 @@ export async function fetchZonas(): Promise<ZonaDto[]> {
 }
 
 export async function crearZona(nombre: string, descripcion: string): Promise<ZonaDto> {
-  const res = await fetch(`${prefix}/v1/zonas`, {
+  const res = await fetch(apiUrl("/v1/zonas"), {
     method: "POST",
     credentials: "include",
     headers: jsonHeaders,
@@ -73,7 +72,7 @@ export async function crearZona(nombre: string, descripcion: string): Promise<Zo
 
 export async function fetchLecturas(zonaId: string, limite = 50): Promise<LecturaDto[]> {
   const q = new URLSearchParams({ limite: String(limite) });
-  const res = await fetch(`${prefix}/v1/zonas/${zonaId}/lecturas?${q}`, {
+  const res = await fetch(apiUrl(`/v1/zonas/${zonaId}/lecturas?${q}`), {
     credentials: "include",
     headers: { Accept: "application/json", "Accept-Language": navigator.language },
   });
@@ -86,7 +85,7 @@ export async function registrarLectura(
   tipo: MetricaTipo,
   valor: number,
 ): Promise<LecturaDto> {
-  const res = await fetch(`${prefix}/v1/zonas/${zonaId}/lecturas`, {
+  const res = await fetch(apiUrl(`/v1/zonas/${zonaId}/lecturas`), {
     method: "POST",
     credentials: "include",
     headers: jsonHeaders,
@@ -97,7 +96,7 @@ export async function registrarLectura(
 }
 
 export async function eliminarZona(zonaId: string): Promise<void> {
-  const res = await fetch(`${prefix}/v1/zonas/${zonaId}`, {
+  const res = await fetch(apiUrl(`/v1/zonas/${zonaId}`), {
     method: "DELETE",
     credentials: "include",
     headers: { Accept: "application/json", "Accept-Language": navigator.language },

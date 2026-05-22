@@ -4,6 +4,7 @@
  */
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { DeployApiHint } from "../components/DeployApiHint";
 import { useAuth } from "../context/AuthContext";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -22,6 +23,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return (
       <div className="layout">
         <p className="error">{error}</p>
+        <DeployApiHint />
       </div>
     );
   }
