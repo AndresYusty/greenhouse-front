@@ -5,6 +5,7 @@
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
+import { toBackendPublicHref } from "../api/backendPublicUrl";
 
 function GoogleGMark() {
   return (
@@ -54,7 +55,7 @@ export function LoginPage() {
     return <Navigate to="/panel" replace />;
   }
 
-  const loginHref = auth?.loginUrl ?? "/oauth2/authorization/google";
+  const loginHref = toBackendPublicHref(auth?.loginUrl ?? "/oauth2/authorization/google");
 
   return (
     <div className="login-page">

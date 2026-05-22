@@ -15,6 +15,7 @@ import {
   type ZonaDto,
 } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { toBackendPublicHref } from "../api/backendPublicUrl";
 
 const METRICAS: MetricaTipo[] = [
   "TEMPERATURA_C",
@@ -156,7 +157,7 @@ export function DashboardPage() {
               <span className="user-label muted" title={auth.email ?? auth.name ?? undefined}>
                 {auth.email ?? auth.name ?? ""}
               </span>
-              <a className="secondary logout-link" href="/logout">
+              <a className="secondary logout-link" href={toBackendPublicHref("/logout")}>
                 {t("auth.logout")}
               </a>
             </div>
