@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 — Proyecto académico Invernadero.
- * Panel principal: zonas, lecturas y formularios.
+ * Panel principal: zonas en barra lateral, detalle por pestañas (mediciones, cultivos, umbrales).
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -30,6 +30,8 @@ const METRICAS: MetricaTipo[] = [
   "HUMEDAD_SUELO_PCT",
 ];
 
+type DetailTab = "readings" | "crops" | "thresholds";
+
 function formatDate(iso: string, locale: string): string {
   try {
     return new Date(iso).toLocaleString(locale.startsWith("es") ? "es" : "en", {
@@ -50,6 +52,7 @@ export function DashboardPage() {
   const [zonas, setZonas] = useState<ZonaDto[] | null>(null);
   const [zonasError, setZonasError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailTab, setDetailTab] = useState<DetailTab>("readings");
 
   const [lecturas, setLecturas] = useState<LecturaDto[] | null>(null);
   const [lecturasError, setLecturasError] = useState<string | null>(null);
@@ -102,6 +105,10 @@ export function DashboardPage() {
     });
   }, [zonas]);
 
+  useEffect(() => {
+    setDetailTab("readings");
+  }, [selectedId]);
+
   const loadLecturas = useCallback(
     (zonaId: string) => {
       setLecturas(null);
@@ -153,6 +160,7 @@ export function DashboardPage() {
   }, [selectedId]);
 
   const selected = zonas?.find((z) => z.id === selectedId) ?? null;
+  const locale = i18n.language.startsWith("es") ? "es" : "en";
 
   const handleCreateZone = (e: FormEvent) => {
     e.preventDefault();
@@ -245,16 +253,27 @@ export function DashboardPage() {
       .finally(() => setSavingUmbral(false));
   };
 
-  const locale = i18n.language.startsWith("es") ? "es" : "en";
+  const flashMessage =
+    flash === "zone"
+      ? t("success.zone")
+      : flash === "reading"
+        ? t("success.reading")
+        : flash === "cultivo"
+          ? t("success.cultivo")
+          : flash === "umbral"
+            ? t("success.umbral")
+            : flash === "zoneDeleted"
+              ? t("success.zoneDeleted")
+              : "";
 
   return (
-    <div className="layout">
-      <header className="header">
-        <div>
-          <h1>{t("app.title")}</h1>
-          <p className="subtitle muted">{t("app.subtitle")}</p>
+    <div className="dashboard-app">
+      <header className="app-header">
+        <div className="app-header__brand">
+          <h1 className="app-header__title">{t("app.title")}</h1>
+          <p className="app-header__subtitle">{t("app.subtitle")}</p>
         </div>
-        <div className="header-actions">
+        <div className="app-header__actions">
           {auth?.oauth2Enabled && auth.authenticated ? (
             <div className="user-session">
               <span className="user-label muted" title={auth.email ?? auth.name ?? undefined}>
@@ -265,7 +284,7 @@ export function DashboardPage() {
               </a>
             </div>
           ) : null}
-          <div className="lang">
+          <div className="lang lang--header" aria-label={t("steps.title")}>
             <button
               type="button"
               className={i18n.language.startsWith("es") ? "active" : ""}
@@ -285,45 +304,41 @@ export function DashboardPage() {
       </header>
 
       {flash && (
-        <div className="flash-success" role="status">
-          {flash === "zone"
-            ? t("success.zone")
-            : flash === "reading"
-              ? t("success.reading")
-              : flash === "cultivo"
-                ? t("success.cultivo")
-                : flash === "umbral"
-                  ? t("success.umbral")
-                  : t("success.zoneDeleted")}
+        <div className="flash-bar" role="status">
+          {flashMessage}
         </div>
       )}
 
-      <section className="card steps-card">
-        <h2 className="steps-heading">{t("steps.title")}</h2>
-        <ol className="steps-list">
+      <details className="help-banner">
+        <summary className="help-banner__summary">{t("ui.quickGuide")}</summary>
+        <ol className="help-banner__steps">
           <li>{t("steps.1")}</li>
           <li>{t("steps.2")}</li>
           <li>{t("steps.3")}</li>
         </ol>
-      </section>
+      </details>
 
       <main className="dashboard">
-        <section className="card zone-panel">
-          <h2>{t("zones.title")}</h2>
-          <p className="panel-hint muted">{t("steps.1")}</p>
-          {zonas === null && !zonasError && <p className="muted">{t("zones.loading")}</p>}
+        <aside className="card sidebar-zone">
+          <div className="card-intro">
+            <h2 className="card-intro__title">{t("zones.title")}</h2>
+            <p className="card-intro__lead">{t("zones.sidebarLead")}</p>
+          </div>
+
+          {zonas === null && !zonasError && <p className="muted sidebar-zone__loading">{t("zones.loading")}</p>}
           {zonasError && <p className="error">{zonasError}</p>}
-          {zonas && zonas.length === 0 && <p className="muted">{t("zones.empty")}</p>}
+          {zonas && zonas.length === 0 && !zonasError && <p className="muted">{t("zones.empty")}</p>}
+
           <ul className="zone-list">
             {zonas?.map((z) => (
               <li key={z.id} className="zone-row">
                 <button
                   type="button"
-                  className={`zone-item ${selectedId === z.id ? "selected" : ""}`}
+                  className={`zone-chip ${selectedId === z.id ? "zone-chip--selected" : ""}`}
                   onClick={() => setSelectedId(z.id)}
                 >
-                  <span className="zone-name">{z.nombre}</span>
-                  {z.descripcion ? <span className="zone-desc muted">{z.descripcion}</span> : null}
+                  <span className="zone-chip__name">{z.nombre}</span>
+                  {z.descripcion ? <span className="zone-chip__desc">{z.descripcion}</span> : null}
                 </button>
                 <button
                   type="button"
@@ -352,8 +367,8 @@ export function DashboardPage() {
             ))}
           </ul>
 
-          <form className="stack-form" onSubmit={handleCreateZone}>
-            <h3 className="form-heading">{t("zones.newTitle")}</h3>
+          <form className="new-zone-form" onSubmit={handleCreateZone}>
+            <h3 className="section-label">{t("zones.newTitle")}</h3>
             <input
               className="input"
               value={newZoneName}
@@ -364,7 +379,7 @@ export function DashboardPage() {
               aria-label={t("zones.namePlaceholder")}
             />
             <textarea
-              className="input textarea"
+              className="input textarea textarea--compact"
               value={newZoneDesc}
               onChange={(ev) => setNewZoneDesc(ev.target.value)}
               placeholder={t("zones.descPlaceholder")}
@@ -372,230 +387,304 @@ export function DashboardPage() {
               maxLength={2000}
               aria-label={t("zones.descPlaceholder")}
             />
-            <button type="submit" className="primary" disabled={creatingZone || !newZoneName.trim()}>
+            <button type="submit" className="btn-primary-solid" disabled={creatingZone || !newZoneName.trim()}>
               {creatingZone ? t("zones.creating") : t("zones.submit")}
             </button>
           </form>
-        </section>
+        </aside>
 
-        <section className="card detail-panel">
-          {!selected && zonas !== null && zonas.length === 0 && (
-            <div className="empty-detail">
-              <p className="muted">{t("zones.empty")}</p>
+        <div className="workspace">
+          {zonas !== null && zonas.length === 0 ? (
+            <div className="card workspace-placeholder">
+              <p className="workspace-placeholder__text">{t("ui.workspaceEmpty")}</p>
             </div>
-          )}
-          {zonas === null && !zonasError && (
-            <div className="empty-detail">
-              <p className="muted">{t("zones.loading")}</p>
+          ) : zonas === null && !zonasError ? (
+            <div className="card workspace-placeholder">
+              <p className="muted">{t("ui.workspaceLoading")}</p>
             </div>
-          )}
-          {selected && (
+          ) : selected ? (
             <>
-              <div className="detail-head">
-                <h2>{selected.nombre}</h2>
-                {selected.descripcion ? <p className="muted">{selected.descripcion}</p> : null}
+              <div className="zone-hero">
+                <span className="zone-hero__badge">{t("ui.zoneActive")}</span>
+                <h2 className="zone-hero__title">{selected.nombre}</h2>
+                {selected.descripcion ? <p className="zone-hero__desc muted">{selected.descripcion}</p> : null}
               </div>
 
-              <h3>{t("crops.title")}</h3>
-              {metaError && <p className="error">{metaError}</p>}
-              {cultivos === null && !metaError && <p className="muted">{t("crops.loading")}</p>}
-              {cultivos && cultivos.length === 0 && !metaError && <p className="muted">{t("crops.empty")}</p>}
-              {cultivos && cultivos.length > 0 && (
-                <ul className="cultivos-list muted">
-                  {cultivos.map((c) => (
-                    <li key={c.id}>
-                      <strong>{c.nombre}</strong>
-                      {c.variedad ? ` (${c.variedad})` : null}
-                      {c.notas ? ` — ${c.notas}` : null}{" "}
-                      <span className="muted">({formatDate(c.plantadoEn, locale)})</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <form className="stack-form" onSubmit={handleSaveCultivo}>
-                <label className="label-row">
-                  <span>{t("crops.nombre")}</span>
-                  <input
-                    className="input"
-                    value={cultivoNombre}
-                    onChange={(ev) => setCultivoNombre(ev.target.value)}
-                    maxLength={200}
-                    required
-                    aria-label={t("crops.nombre")}
-                  />
-                </label>
-                <label className="label-row">
-                  <span>{t("crops.variedad")}</span>
-                  <input
-                    className="input"
-                    value={cultivoVariedad}
-                    onChange={(ev) => setCultivoVariedad(ev.target.value)}
-                    maxLength={120}
-                    aria-label={t("crops.variedad")}
-                  />
-                </label>
-                <label className="label-row">
-                  <span>{t("crops.notas")}</span>
-                  <input
-                    className="input"
-                    value={cultivoNotas}
-                    onChange={(ev) => setCultivoNotas(ev.target.value)}
-                    maxLength={2000}
-                    aria-label={t("crops.notas")}
-                  />
-                </label>
-                <button type="submit" className="secondary" disabled={savingCultivo}>
-                  {savingCultivo ? t("crops.saving") : t("crops.submit")}
+              <div className="tab-bar" role="tablist">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={detailTab === "readings"}
+                  className={`tab-bar__btn ${detailTab === "readings" ? "tab-bar__btn--active" : ""}`}
+                  onClick={() => setDetailTab("readings")}
+                >
+                  {t("ui.tab.readings")}
                 </button>
-              </form>
-
-              <h3>{t("thresholds.title")}</h3>
-              <p className="muted small">{t("thresholds.help")}</p>
-              {umbrales === null && !metaError && <p className="muted">{t("thresholds.loading")}</p>}
-              {umbrales && umbrales.length > 0 && (
-                <div className="table-wrap">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>{t("thresholds.metric")}</th>
-                        <th>{t("thresholds.min")}</th>
-                        <th>{t("thresholds.max")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {umbrales.map((u) => (
-                        <tr key={u.id}>
-                          <td>{t(`metric.${u.tipo}`)}</td>
-                          <td className="num">{u.valorMin != null ? u.valorMin : "—"}</td>
-                          <td className="num">{u.valorMax != null ? u.valorMax : "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              <form className="stack-form reading-form" onSubmit={handleSaveUmbral}>
-                <label className="label-row">
-                  <span>{t("thresholds.metric")}</span>
-                  <select className="input" value={umbralTipo} onChange={(ev) => setUmbralTipo(ev.target.value as MetricaTipo)}>
-                    {METRICAS.map((m) => (
-                      <option key={m} value={m}>
-                        {t(`metric.${m}`)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="label-row">
-                  <span>{t("thresholds.min")}</span>
-                  <input
-                    className="input"
-                    type="text"
-                    inputMode="decimal"
-                    value={umbralMinStr}
-                    onChange={(ev) => {
-                      setUmbralMinStr(ev.target.value);
-                      setUmbralInputError(null);
-                    }}
-                  />
-                </label>
-                <label className="label-row">
-                  <span>{t("thresholds.max")}</span>
-                  <input
-                    className="input"
-                    type="text"
-                    inputMode="decimal"
-                    value={umbralMaxStr}
-                    onChange={(ev) => {
-                      setUmbralMaxStr(ev.target.value);
-                      setUmbralInputError(null);
-                    }}
-                  />
-                </label>
-                {umbralInputError ? (
-                  <p className="error small" id="umbral-err">
-                    {umbralInputError}
-                  </p>
-                ) : null}
-                <button type="submit" className="secondary" disabled={savingUmbral}>
-                  {savingUmbral ? t("thresholds.saving") : t("thresholds.submit")}
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={detailTab === "crops"}
+                  className={`tab-bar__btn ${detailTab === "crops" ? "tab-bar__btn--active" : ""}`}
+                  onClick={() => setDetailTab("crops")}
+                >
+                  {t("ui.tab.crops")}
                 </button>
-              </form>
-
-              <div className="readings-head">
-                <h3>{t("readings.title")}</h3>
-                <button type="button" className="secondary" onClick={() => loadLecturas(selected.id)}>
-                  {t("readings.refresh")}
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={detailTab === "thresholds"}
+                  className={`tab-bar__btn ${detailTab === "thresholds" ? "tab-bar__btn--active" : ""}`}
+                  onClick={() => setDetailTab("thresholds")}
+                >
+                  {t("ui.tab.thresholds")}
                 </button>
               </div>
 
-              {lecturas === null && !lecturasError && <p className="muted">{t("readings.loading")}</p>}
-              {lecturasError && <p className="error">{lecturasError}</p>}
-              {lecturas && lecturas.length === 0 && <p className="muted">{t("readings.none")}</p>}
-              {lecturas && lecturas.length > 0 && (
-                <div className="table-wrap">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>{t("readings.colTime")}</th>
-                        <th>{t("readings.colMetric")}</th>
-                        <th>{t("readings.colValue")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lecturas.map((r) => (
-                        <tr key={r.id}>
-                          <td>{formatDate(r.registradoEn, locale)}</td>
-                          <td>{t(`metric.${r.tipo}`)}</td>
-                          <td className="num">{r.valor}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <div className="card tab-sheet" role="tabpanel">
+                {detailTab === "readings" && (
+                  <div className="tab-sheet__inner">
+                    <div className="panel-toolbar">
+                      <h3 className="panel-toolbar__title">{t("readings.historyTitle")}</h3>
+                      <button type="button" className="btn-ghost" onClick={() => loadLecturas(selected.id)}>
+                        {t("readings.refresh")}
+                      </button>
+                    </div>
+                    {lecturas === null && !lecturasError && <p className="muted">{t("readings.loading")}</p>}
+                    {lecturasError && <p className="error">{lecturasError}</p>}
+                    {lecturas && lecturas.length === 0 && <p className="muted">{t("readings.none")}</p>}
+                    {lecturas && lecturas.length > 0 && (
+                      <div className="table-wrap">
+                        <table className="data-table data-table--comfortable">
+                          <thead>
+                            <tr>
+                              <th>{t("readings.colTime")}</th>
+                              <th>{t("readings.colMetric")}</th>
+                              <th className="col-num">{t("readings.colValue")}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {lecturas.map((r) => (
+                              <tr key={r.id}>
+                                <td>{formatDate(r.registradoEn, locale)}</td>
+                                <td>{t(`metric.${r.tipo}`)}</td>
+                                <td className="col-num">{r.valor}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
-              <form className="stack-form reading-form" onSubmit={handleSaveReading}>
-                <h3 className="form-heading">{t("readings.newTitle")}</h3>
-                <label className="label-row">
-                  <span>{t("readings.metric")}</span>
-                  <select className="input" value={readingTipo} onChange={(ev) => setReadingTipo(ev.target.value as MetricaTipo)}>
-                    {METRICAS.map((m) => (
-                      <option key={m} value={m}>
-                        {t(`metric.${m}`)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="label-row">
-                  <span>{t("readings.value")}</span>
-                  <input
-                    className="input"
-                    type="text"
-                    inputMode="decimal"
-                    value={readingValor}
-                    onChange={(ev) => {
-                      setReadingValor(ev.target.value);
-                      setReadingInputError(null);
-                    }}
-                    aria-invalid={!!readingInputError}
-                    aria-describedby={readingInputError ? "reading-err" : undefined}
-                  />
-                </label>
-                {readingInputError ? (
-                  <p id="reading-err" className="error small">
-                    {readingInputError}
-                  </p>
-                ) : null}
-                <button type="submit" className="primary" disabled={savingReading}>
-                  {savingReading ? t("readings.saving") : t("readings.submit")}
-                </button>
-              </form>
+                    <div className="section-divider" />
+                    <h3 className="section-label">{t("readings.newTitle")}</h3>
+                    <form className="form-grid-reading" onSubmit={handleSaveReading}>
+                      <label className="field">
+                        <span className="field__label">{t("readings.metric")}</span>
+                        <select
+                          className="input"
+                          value={readingTipo}
+                          onChange={(ev) => setReadingTipo(ev.target.value as MetricaTipo)}
+                        >
+                          {METRICAS.map((m) => (
+                            <option key={m} value={m}>
+                              {t(`metric.${m}`)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="field">
+                        <span className="field__label">{t("readings.value")}</span>
+                        <input
+                          className="input"
+                          type="text"
+                          inputMode="decimal"
+                          value={readingValor}
+                          onChange={(ev) => {
+                            setReadingValor(ev.target.value);
+                            setReadingInputError(null);
+                          }}
+                          aria-invalid={!!readingInputError}
+                          aria-describedby={readingInputError ? "reading-err" : undefined}
+                        />
+                      </label>
+                      <div className="form-grid-reading__action">
+                        {readingInputError ? (
+                          <p id="reading-err" className="error small form-grid-reading__error">
+                            {readingInputError}
+                          </p>
+                        ) : null}
+                        <button type="submit" className="btn-primary-solid" disabled={savingReading}>
+                          {savingReading ? t("readings.saving") : t("readings.submit")}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {detailTab === "crops" && (
+                  <div className="tab-sheet__inner">
+                    {metaError && <p className="error">{metaError}</p>}
+                    <h3 className="panel-toolbar__title panel-toolbar__title--solo">{t("crops.title")}</h3>
+                    {cultivos === null && !metaError && <p className="muted">{t("crops.loading")}</p>}
+                    {cultivos && cultivos.length === 0 && !metaError && (
+                      <p className="muted empty-hint">{t("crops.empty")}</p>
+                    )}
+                    {cultivos && cultivos.length > 0 && (
+                      <ul className="crop-card-list">
+                        {cultivos.map((c) => (
+                          <li key={c.id} className="crop-card">
+                            <div className="crop-card__top">
+                              <span className="crop-card__name">{c.nombre}</span>
+                              {c.variedad ? <span className="crop-card__badge">{c.variedad}</span> : null}
+                            </div>
+                            {c.notas ? <p className="crop-card__notes muted">{c.notas}</p> : null}
+                            <p className="crop-card__meta muted">{formatDate(c.plantadoEn, locale)}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <div className="section-divider" />
+                    <h3 className="section-label">{t("crops.formSection")}</h3>
+                    <form className="form-grid-crop" onSubmit={handleSaveCultivo}>
+                      <label className="field span-2-md">
+                        <span className="field__label">{t("crops.nombre")}</span>
+                        <input
+                          className="input"
+                          value={cultivoNombre}
+                          onChange={(ev) => setCultivoNombre(ev.target.value)}
+                          maxLength={200}
+                          required
+                          aria-label={t("crops.nombre")}
+                        />
+                      </label>
+                      <label className="field">
+                        <span className="field__label">{t("crops.variedad")}</span>
+                        <input
+                          className="input"
+                          value={cultivoVariedad}
+                          onChange={(ev) => setCultivoVariedad(ev.target.value)}
+                          maxLength={120}
+                          aria-label={t("crops.variedad")}
+                        />
+                      </label>
+                      <label className="field">
+                        <span className="field__label">{t("crops.notas")}</span>
+                        <input
+                          className="input"
+                          value={cultivoNotas}
+                          onChange={(ev) => setCultivoNotas(ev.target.value)}
+                          maxLength={2000}
+                          aria-label={t("crops.notas")}
+                        />
+                      </label>
+                      <div className="form-grid-reading__action span-2-md">
+                        <button type="submit" className="btn-secondary-outline" disabled={savingCultivo}>
+                          {savingCultivo ? t("crops.saving") : t("crops.submit")}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {detailTab === "thresholds" && (
+                  <div className="tab-sheet__inner">
+                    <h3 className="panel-toolbar__title panel-toolbar__title--solo">{t("thresholds.title")}</h3>
+                    <p className="threshold-lead muted">{t("thresholds.help")}</p>
+                    {metaError && <p className="error">{metaError}</p>}
+                    {umbrales === null && !metaError && <p className="muted">{t("thresholds.loading")}</p>}
+                    {umbrales && umbrales.length === 0 && !metaError && (
+                      <p className="muted empty-hint">{t("thresholds.empty")}</p>
+                    )}
+                    {umbrales && umbrales.length > 0 && (
+                      <div className="table-wrap">
+                        <table className="data-table data-table--comfortable">
+                          <thead>
+                            <tr>
+                              <th>{t("thresholds.metric")}</th>
+                              <th className="col-num">{t("thresholds.min")}</th>
+                              <th className="col-num">{t("thresholds.max")}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {umbrales.map((u) => (
+                              <tr key={u.id}>
+                                <td>{t(`metric.${u.tipo}`)}</td>
+                                <td className="col-num">{u.valorMin != null ? u.valorMin : "—"}</td>
+                                <td className="col-num">{u.valorMax != null ? u.valorMax : "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    <div className="section-divider" />
+                    <h3 className="section-label">{t("thresholds.formSection")}</h3>
+                    <form className="form-grid-threshold" onSubmit={handleSaveUmbral}>
+                      <label className="field">
+                        <span className="field__label">{t("thresholds.metric")}</span>
+                        <select
+                          className="input"
+                          value={umbralTipo}
+                          onChange={(ev) => setUmbralTipo(ev.target.value as MetricaTipo)}
+                        >
+                          {METRICAS.map((m) => (
+                            <option key={m} value={m}>
+                              {t(`metric.${m}`)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="field">
+                        <span className="field__label">{t("thresholds.min")}</span>
+                        <input
+                          className="input"
+                          type="text"
+                          inputMode="decimal"
+                          value={umbralMinStr}
+                          onChange={(ev) => {
+                            setUmbralMinStr(ev.target.value);
+                            setUmbralInputError(null);
+                          }}
+                        />
+                      </label>
+                      <label className="field">
+                        <span className="field__label">{t("thresholds.max")}</span>
+                        <input
+                          className="input"
+                          type="text"
+                          inputMode="decimal"
+                          value={umbralMaxStr}
+                          onChange={(ev) => {
+                            setUmbralMaxStr(ev.target.value);
+                            setUmbralInputError(null);
+                          }}
+                        />
+                      </label>
+                      <div className="form-grid-reading__action form-grid-threshold__action">
+                        {umbralInputError ? (
+                          <p id="umbral-err" className="error small">
+                            {umbralInputError}
+                          </p>
+                        ) : null}
+                        <button type="submit" className="btn-secondary-outline" disabled={savingUmbral}>
+                          {savingUmbral ? t("thresholds.saving") : t("thresholds.submit")}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
             </>
+          ) : (
+            <div className="card workspace-placeholder">
+              <p className="muted">{t("ui.workspaceLoading")}</p>
+            </div>
           )}
-        </section>
+        </div>
       </main>
 
-      <footer className="footer muted">
+      <footer className="app-footer muted">
         <small>
           {t("metrics.temp")} · {t("metrics.humidity")}
         </small>
