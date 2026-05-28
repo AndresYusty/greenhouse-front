@@ -39,11 +39,8 @@ export function OverviewTab({
 
   return (
     <div className="tab-sheet__inner">
-      <div className="panel-toolbar">
-        <div>
-          <h3 className="panel-toolbar__title">{t("overview.title")}</h3>
-          <p className="overview-lead muted">{t("overview.lead")}</p>
-        </div>
+      <div className="panel-toolbar panel-toolbar--compact">
+        <p className="overview-lead muted">{t("overview.lead")}</p>
         <button type="button" className="btn-ghost" onClick={onRefresh}>
           {t("overview.refreshAll")}
         </button>

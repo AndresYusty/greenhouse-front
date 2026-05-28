@@ -1,11 +1,12 @@
 /**
  * Copyright (c) 2026 — Proyecto académico Invernadero.
- * Panel principal: barra lateral de zonas + workspace con resumen y pestañas de detalle.
+ * Panel con menú lateral y área principal de contenido.
  */
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DashboardHeader } from "../components/dashboard/DashboardHeader";
+import { AppSidebar } from "../components/dashboard/AppSidebar";
+import { DashboardTopBar } from "../components/dashboard/DashboardTopBar";
 import { DashboardWorkspace } from "../components/dashboard/DashboardWorkspace";
-import { ZoneSidebar } from "../components/dashboard/ZoneSidebar";
 import { useDashboard } from "../hooks/useDashboard";
 import { useZonaSnapshots } from "../hooks/useZonaSnapshots";
 
@@ -14,59 +15,44 @@ export function DashboardPage() {
   const state = useDashboard();
   const snapshots = useZonaSnapshots(state.zonas);
   const locale = i18n.language.startsWith("es") ? "es" : "en";
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const selected = state.zonas?.find((z) => z.id === state.selectedId) ?? null;
 
   return (
-    <div className="dashboard-app">
-      <DashboardHeader
+    <div className="dashboard-shell">
+      <AppSidebar
+        active={state.detailTab}
+        onNavigate={state.setDetailTab}
+        zonas={state.zonas}
+        selectedId={state.selectedId}
+        onSelectZone={state.setSelectedId}
         language={i18n.language}
         onLanguageChange={(lang) => void i18n.changeLanguage(lang)}
+        mobileOpen={mobileNavOpen}
+        onCloseMobile={() => setMobileNavOpen(false)}
       />
 
-      {state.flash && (
-        <div className="flash-bar" role="status">
-          {state.flashMessage}
-        </div>
-      )}
-
-      <details className="help-banner">
-        <summary className="help-banner__summary">{t("ui.quickGuide")}</summary>
-        <ol className="help-banner__steps">
-          <li>{t("steps.1")}</li>
-          <li>{t("steps.2")}</li>
-          <li>{t("steps.3")}</li>
-        </ol>
-      </details>
-
-      <main className="dashboard">
-        <ZoneSidebar
-          zonas={state.zonas}
-          zonasError={state.zonasError}
-          selectedId={state.selectedId}
-          onSelect={state.setSelectedId}
-          onDelete={state.handleDeleteZone}
-          newZoneName={state.newZoneName}
-          newZoneDesc={state.newZoneDesc}
-          creatingZone={state.creatingZone}
-          onNameChange={state.setNewZoneName}
-          onDescChange={state.setNewZoneDesc}
-          onSubmit={state.handleCreateZone}
+      <div className="app-main">
+        <DashboardTopBar
+          section={state.detailTab}
+          selected={selected}
+          onOpenMenu={() => setMobileNavOpen(true)}
         />
 
-        <div className="workspace">
-          <DashboardWorkspace
-            state={state}
-            locale={locale}
-            zonas={state.zonas ?? []}
-            snapshots={snapshots}
-          />
-        </div>
-      </main>
+        {state.flash && (
+          <div className="flash-bar flash-bar--inline" role="status">
+            {state.flashMessage}
+          </div>
+        )}
 
-      <footer className="app-footer muted">
-        <small>
-          {t("metrics.temp")} · {t("metrics.humidity")}
-        </small>
-      </footer>
+        <DashboardWorkspace
+          state={state}
+          locale={locale}
+          zonas={state.zonas ?? []}
+          snapshots={snapshots}
+        />
+      </div>
     </div>
   );
 }

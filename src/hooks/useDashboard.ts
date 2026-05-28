@@ -147,7 +147,7 @@ export function useDashboard() {
         return fetchZonas().then((list) => {
           setZonas(list);
           setSelectedId(z.id);
-          setDetailTab("overview");
+          setDetailTab("zones");
         });
       })
       .catch(() => setZonasError(t("zones.error")))

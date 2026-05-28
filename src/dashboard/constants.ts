@@ -7,6 +7,8 @@ export const METRICAS: MetricaTipo[] = [
   "HUMEDAD_SUELO_PCT",
 ];
 
-export type DetailTab = "overview" | "readings" | "crops" | "thresholds";
+export type DetailTab = "overview" | "zones" | "readings" | "crops" | "thresholds";
+
+export const NAV_SECTIONS: DetailTab[] = ["overview", "zones", "readings", "crops", "thresholds"];
 
 export type Flash = null | "zone" | "reading" | "zoneDeleted" | "cultivo" | "umbral";

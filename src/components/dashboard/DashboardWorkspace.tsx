@@ -7,6 +7,7 @@ import { CropsTab } from "./CropsTab";
 import { OverviewTab } from "./OverviewTab";
 import { ReadingsTab } from "./ReadingsTab";
 import { ThresholdsTab } from "./ThresholdsTab";
+import { ZonesPanel } from "./ZonesPanel";
 
 type DashboardState = ReturnType<typeof useDashboard>;
 
@@ -17,8 +18,19 @@ type Props = {
   snapshots: Record<string, ZonaSnapshot>;
 };
 
-export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
+function ZoneRequiredPlaceholder({ onGoZones }: { onGoZones: () => void }) {
   const { t } = useTranslation();
+  return (
+    <div className="card workspace-placeholder">
+      <p className="workspace-placeholder__text">{t("ui.workspaceEmpty")}</p>
+      <button type="button" className="btn-primary-solid workspace-placeholder__cta" onClick={onGoZones}>
+        {t("nav.goZones")}
+      </button>
+    </div>
+  );
+}
+
+export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
   const {
     zonas: zonasState,
     zonasError,
@@ -32,6 +44,11 @@ export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
     cultivos,
     umbrales,
     metaError,
+    newZoneName,
+    newZoneDesc,
+    creatingZone,
+    setNewZoneName,
+    setNewZoneDesc,
     readingTipo,
     setReadingTipo,
     readingValor,
@@ -57,17 +74,35 @@ export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
     savingUmbral,
     refreshSelectedZone,
     loadLecturas,
+    handleCreateZone,
     handleSaveReading,
     handleSaveCultivo,
     handleSaveUmbral,
+    handleDeleteZone,
   } = state;
 
-  if (zonasState !== null && zonasState.length === 0) {
+  const { t } = useTranslation();
+
+  if (detailTab === "zones") {
     return (
-      <div className="card workspace-placeholder">
-        <p className="workspace-placeholder__text">{t("ui.workspaceEmpty")}</p>
-      </div>
+      <ZonesPanel
+        zonas={zonasState}
+        zonasError={zonasError}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+        onDelete={handleDeleteZone}
+        newZoneName={newZoneName}
+        newZoneDesc={newZoneDesc}
+        creatingZone={creatingZone}
+        onNameChange={setNewZoneName}
+        onDescChange={setNewZoneDesc}
+        onSubmit={handleCreateZone}
+      />
     );
+  }
+
+  if (zonasState !== null && zonasState.length === 0) {
+    return <ZoneRequiredPlaceholder onGoZones={() => setDetailTab("zones")} />;
   }
 
   if (zonasState === null && !zonasError) {
@@ -86,38 +121,10 @@ export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
     );
   }
 
-  const tabs: { id: DetailTab; label: string }[] = [
-    { id: "overview", label: t("ui.tab.overview") },
-    { id: "readings", label: t("ui.tab.readings") },
-    { id: "crops", label: t("ui.tab.crops") },
-    { id: "thresholds", label: t("ui.tab.thresholds") },
-  ];
-
-  return (
-    <>
-      <div className="zone-hero">
-        <span className="zone-hero__badge">{t("ui.zoneActive")}</span>
-        <h2 className="zone-hero__title">{selected.nombre}</h2>
-        {selected.descripcion ? <p className="zone-hero__desc muted">{selected.descripcion}</p> : null}
-      </div>
-
-      <div className="tab-bar" role="tablist">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={detailTab === tab.id}
-            className={`tab-bar__btn ${detailTab === tab.id ? "tab-bar__btn--active" : ""}`}
-            onClick={() => setDetailTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="card tab-sheet" role="tabpanel">
-        {detailTab === "overview" && (
+  const panel = (() => {
+    switch (detailTab) {
+      case "overview":
+        return (
           <OverviewTab
             locale={locale}
             lecturas={lecturas}
@@ -133,8 +140,9 @@ export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
             }}
             onRefresh={refreshSelectedZone}
           />
-        )}
-        {detailTab === "readings" && (
+        );
+      case "readings":
+        return (
           <ReadingsTab
             locale={locale}
             lecturas={lecturas}
@@ -143,14 +151,15 @@ export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
             readingValor={readingValor}
             readingInputError={readingInputError}
             savingReading={savingReading}
-            onRefresh={() => selectedId && loadLecturas(selectedId)}
+            onRefresh={() => loadLecturas(selectedId)}
             onTipoChange={setReadingTipo}
             onValorChange={setReadingValor}
             onClearError={() => setReadingInputError(null)}
             onSubmit={handleSaveReading}
           />
-        )}
-        {detailTab === "crops" && (
+        );
+      case "crops":
+        return (
           <CropsTab
             locale={locale}
             cultivos={cultivos}
@@ -164,8 +173,9 @@ export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
             onNotasChange={setCultivoNotas}
             onSubmit={handleSaveCultivo}
           />
-        )}
-        {detailTab === "thresholds" && (
+        );
+      case "thresholds":
+        return (
           <ThresholdsTab
             umbrales={umbrales}
             metaError={metaError}
@@ -180,8 +190,11 @@ export function DashboardWorkspace({ state, locale, zonas, snapshots }: Props) {
             onClearError={() => setUmbralInputError(null)}
             onSubmit={handleSaveUmbral}
           />
-        )}
-      </div>
-    </>
-  );
+        );
+      default:
+        return null;
+    }
+  })();
+
+  return <div className="card page-content">{panel}</div>;
 }
